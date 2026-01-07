@@ -35,6 +35,7 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            display: block;
         }
 
         #starsCanvas {
@@ -388,6 +389,9 @@
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            console.log('Canvas resized to:', canvas.width, 'x', canvas.height);
         }
         resizeCanvas();
 
