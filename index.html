@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matrix Birthday Card</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -16,7 +19,7 @@
             height: 100vh;
             background: #000;
             overflow: hidden;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Poppins', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -187,6 +190,65 @@
             }
         }
 
+        /* Mobile Rotation Message */
+        #rotateMessage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #rotateMessage.show {
+            display: flex;
+        }
+
+        .rotate-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: rotatePhone 2s infinite ease-in-out;
+        }
+
+        @keyframes rotatePhone {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(90deg);
+            }
+        }
+
+        .rotate-text {
+            color: #ff6bb8;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(255, 107, 184, 0.8);
+            max-width: 300px;
+            line-height: 1.6;
+        }
+
+        /* Watermark */
+        .watermark {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            color: #888;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            text-align: center;
+            pointer-events: none;
+            text-shadow: 0 0 5px rgba(136, 136, 136, 0.3);
+        }
+
         @media (max-width: 768px) {
             .countdown {
                 font-size: 20vw;
@@ -195,10 +257,66 @@
             .message {
                 font-size: 12vw;
             }
+
+            #birthdayImage {
+                max-width: 40vw;
+                max-height: 60vh;
+            }
+
+            .lyrics-container {
+                width: 20%;
+            }
+
+            .heart {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 768px) and (orientation: portrait) {
+            #rotateMessage {
+                display: flex !important;
+            }
+        }
+
+        @media (max-width: 768px) and (orientation: landscape) {
+            .countdown {
+                font-size: 15vh;
+            }
+            
+            .message {
+                font-size: 10vh;
+            }
+
+            .note {
+                font-size: 3vh;
+            }
+
+            #birthdayImage {
+                max-width: 35vw;
+                max-height: 70vh;
+            }
+
+            .lyrics-container {
+                width: 22%;
+            }
+
+            .heart {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Rotate Message for Mobile Portrait -->
+    <div id="rotateMessage">
+        <div class="rotate-icon">📱</div>
+        <div class="rotate-text">
+            Please rotate your phone<br>
+            to landscape mode<br>
+            for the best experience
+        </div>
+    </div>
+
     <canvas id="matrixCanvas"></canvas>
     <canvas id="starsCanvas"></canvas>
     <canvas id="fireworksCanvas"></canvas>
@@ -211,11 +329,34 @@
     <div class="lyrics-container lyrics-left" id="lyricsLeft"></div>
     <div class="lyrics-container lyrics-right" id="lyricsRight"></div>
 
+    <div class="watermark">Coded by mohamed.lio for Malak</div>
+
     <audio id="bgMusic" autoplay loop>
         <source src="./Lege-Cy - Placebo  ليجي-سي - بلاسيبو (Official Audio).mp3" type="audio/mpeg">
     </audio>
 
     <script>
+        // Check orientation on mobile devices
+        function checkOrientation() {
+            const rotateMsg = document.getElementById('rotateMessage');
+            if (window.innerWidth <= 768) {
+                if (window.innerHeight > window.innerWidth) {
+                    // Portrait mode
+                    rotateMsg.classList.add('show');
+                } else {
+                    // Landscape mode
+                    rotateMsg.classList.remove('show');
+                }
+            } else {
+                rotateMsg.classList.remove('show');
+            }
+        }
+
+        // Check on load and resize
+        window.addEventListener('load', checkOrientation);
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+
         // Matrix Rain Effect
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
@@ -514,12 +655,27 @@
             // Play music with interaction fallback
             const music = document.getElementById('bgMusic');
             music.volume = 0.7;
-            music.play().catch(e => {
-                console.log('Click anywhere to start music');
-                document.body.addEventListener('click', () => {
-                    music.play();
-                }, { once: true });
-            });
+            
+            // Try to play immediately
+            const playPromise = music.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('Music started automatically');
+                }).catch(e => {
+                    console.log('Autoplay prevented - Click anywhere to start music');
+                    // Add click listener to entire document
+                    const startMusic = () => {
+                        music.play().then(() => {
+                            console.log('Music started after user interaction');
+                        });
+                        document.removeEventListener('click', startMusic);
+                        document.removeEventListener('touchstart', startMusic);
+                    };
+                    document.addEventListener('click', startMusic);
+                    document.addEventListener('touchstart', startMusic);
+                });
+            }
 
             const lyricsLeft = document.getElementById('lyricsLeft');
             const lyricsRight = document.getElementById('lyricsRight');
