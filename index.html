@@ -384,8 +384,12 @@
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Set canvas size to match window dimensions
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
 
         // Matrix characters - Only "HAPPY BIRTHDAY" in pink shades
         const alphabet = 'HAPPYBIRTHDAY';
@@ -423,8 +427,11 @@
 
         // Handle window resize
         window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            resizeCanvas();
+        });
+
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 100);
         });
 
         // Stars Effect
@@ -685,7 +692,23 @@
             // Play music automatically
             const music = document.getElementById('bgMusic');
             music.volume = 0.7;
-            music.play().catch(err => console.log('Autoplay - browser muted by default'));
+            music.preload = 'auto';
+            
+            // Delay slightly to ensure audio is ready
+            setTimeout(() => {
+                music.play().then(() => {
+                    console.log('Music playing');
+                }).catch(err => {
+                    console.log('Autoplay failed, trying with user gesture');
+                    // Try on user interaction
+                    document.addEventListener('click', () => {
+                        music.play();
+                    }, { once: true });
+                    document.addEventListener('touchstart', () => {
+                        music.play();
+                    }, { once: true });
+                });
+            }, 500);
 
             const lyricsLeft = document.getElementById('lyricsLeft');
             const lyricsRight = document.getElementById('lyricsRight');
