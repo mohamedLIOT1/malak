@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Birthday Card</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #starsCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #starsCanvas.show {
+            opacity: 1;
+        }
+
+        #fireworksCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        #heartCanvas {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #heartCanvas.show {
+            opacity: 1;
+        }
+
+        #textContainer {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #textContainer.show {
+            opacity: 1;
+        }
+
+        .countdown {
+            font-size: 15vw;
+            color: #ff4fa3;
+            font-weight: bold;
+            text-shadow: 0 0 8px #ff4fa3, 0 0 16px #ff7ac4;
+        }
+
+        .message {
+            font-size: 10vw;
+            color: #ff4fa3;
+            font-weight: bold;
+            text-shadow: 0 0 8px #ff4fa3, 0 0 16px #ff7ac4;
+            letter-spacing: 0.1em;
+        }
+
+        .note {
+            font-size: 4vw;
+            max-width: 80vw;
+            color: #ff6bb8;
+            font-weight: 600;
+            text-shadow: 0 0 12px rgba(255, 107, 184, 0.7);
+            line-height: 1.5;
+            letter-spacing: 0.03em;
+        }
+
+        #imageContainer {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            max-width: 50vw;
+            max-height: 50vh;
+        }
+
+        #imageContainer.show {
+            opacity: 1;
+        }
+
+        #birthdayImage {
+            max-width: 100%;
+            max-height: 50vh;
+            border-radius: 15px;
+            box-shadow: 0 0 26px rgba(255, 79, 163, 0.55), 0 0 46px rgba(255, 122, 196, 0.45);
+        }
+
+        @media (max-width: 768px) {
+            .countdown {
+                font-size: 20vw;
+            }
+            
+            .message {
+                font-size: 12vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrixCanvas"></canvas>
+    <canvas id="starsCanvas"></canvas>
+    <canvas id="fireworksCanvas"></canvas>
+    <canvas id="heartCanvas"></canvas>
+    <div id="textContainer"></div>
+    <div id="imageContainer">
+        <img id="birthdayImage" src="./1e599641-0614-46d0-9d57-150f42b4fd0a.gif" alt="Happy Birthday">
+    </div>
+
+    <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Matrix characters - Only "HAPPY BIRTHDAY" in pink shades
+        const alphabet = 'HAPPYBIRTHDAY';
+        const pinkPalette = ['#ff4fa3', '#ff6bb8', '#ff85c9', '#ff9ad8'];
+
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+
+        const rainDrops = [];
+
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = Math.random() * canvas.height / fontSize;
+        }
+
+        const draw = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = pinkPalette[Math.floor(Math.random() * pinkPalette.length)];
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        };
+
+        // Start matrix animation
+        const matrixInterval = setInterval(draw, 30);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Stars Effect
+        const starsCanvas = document.getElementById('starsCanvas');
+        const starsCtx = starsCanvas.getContext('2d');
+        
+        starsCanvas.width = window.innerWidth;
+        starsCanvas.height = window.innerHeight;
+
+        const stars = [];
+        const numStars = 200;
+
+        // Create stars
+        for (let i = 0; i < numStars; i++) {
+            stars.push({
+                x: Math.random() * starsCanvas.width,
+                y: Math.random() * starsCanvas.height,
+                radius: Math.random() * 1.8 + 0.4,
+                speed: Math.random() * 0.5 + 0.1,
+                opacity: Math.random() * 0.7 + 0.2,
+                pulseSpeed: Math.random() * 0.08 + 0.02,
+                pulsePhase: Math.random() * Math.PI * 2,
+                flareTimer: Math.random() * 200 + 80
+            });
+        }
+
+        const drawStars = () => {
+            starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+            
+            stars.forEach(star => {
+                // base twinkle using sine pulse
+                star.pulsePhase += star.pulseSpeed;
+                const pulse = 0.35 + 0.65 * Math.abs(Math.sin(star.pulsePhase));
+                let currentOpacity = Math.min(1, star.opacity * pulse);
+
+                // occasional flare
+                star.flareTimer -= 1;
+                if (star.flareTimer < 0) {
+                    currentOpacity = 1;
+                    star.flareTimer = Math.random() * 200 + 80;
+                }
+
+                // draw star
+                starsCtx.beginPath();
+                starsCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                starsCtx.fillStyle = `rgba(255, 255, 255, ${currentOpacity})`;
+                starsCtx.fill();
+
+                // subtle movement for life
+                star.opacity += star.speed * 0.01;
+                if (star.opacity > 1) star.opacity = 0.8;
+                if (star.opacity < 0.2) star.opacity = 0.25;
+            });
+        };
+
+        let starsInterval;
+
+        window.addEventListener('resize', () => {
+            starsCanvas.width = window.innerWidth;
+            starsCanvas.height = window.innerHeight;
+        });
+
+        // Fireworks Effect
+        const fireworksCanvas = document.getElementById('fireworksCanvas');
+        const fireworksCtx = fireworksCanvas.getContext('2d');
+        fireworksCanvas.width = window.innerWidth;
+        fireworksCanvas.height = window.innerHeight;
+
+        const particles = [];
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 8,
+                    y: (Math.random() - 0.5) * 8
+                };
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.015;
+            }
+
+            update() {
+                this.velocity.x *= 0.98;
+                this.velocity.y *= 0.98;
+                this.velocity.y += 0.1;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                fireworksCtx.save();
+                fireworksCtx.globalAlpha = this.alpha;
+                fireworksCtx.fillStyle = this.color;
+                fireworksCtx.shadowBlur = 15;
+                fireworksCtx.shadowColor = this.color;
+                fireworksCtx.beginPath();
+                fireworksCtx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+                fireworksCtx.fill();
+                fireworksCtx.restore();
+            }
+        }
+
+        function createFirework(x, y) {
+            const colors = ['#ff1493', '#ff69b4', '#ff85c9', '#ffb3f0', '#fff'];
+            const particleCount = 60;
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)]));
+            }
+        }
+
+        function animateFireworks() {
+            fireworksCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+
+            particles.forEach((particle, index) => {
+                if (particle.alpha <= 0) {
+                    particles.splice(index, 1);
+                } else {
+                    particle.update();
+                    particle.draw();
+                }
+            });
+
+            requestAnimationFrame(animateFireworks);
+        }
+
+        let fireworksInterval;
+
+        window.addEventListener('resize', () => {
+            fireworksCanvas.width = window.innerWidth;
+            fireworksCanvas.height = window.innerHeight;
+        });
+
+        // Heart Canvas
+        const heartCanvas = document.getElementById('heartCanvas');
+        const heartCtx = heartCanvas.getContext('2d');
+        const heartSize = Math.min(window.innerWidth, window.innerHeight) * 0.7;
+        heartCanvas.width = heartSize;
+        heartCanvas.height = heartSize;
+
+        const heartAlphabet = 'HAPPYBIRTHDAY';
+        const heartFontSize = 8;
+        const heartCols = Math.floor(heartSize / heartFontSize);
+        const heartRows = Math.floor(heartSize / heartFontSize);
+        const heartLetters = [];
+
+        // Create heart shape
+        for (let y = 0; y < heartRows; y++) {
+            for (let x = 0; x < heartCols; x++) {
+                const nx = (x / heartCols - 0.5) * 3.5;
+                const ny = -(y / heartRows - 0.5) * 3.5 - 0.4;
+                // Better heart equation
+                const inHeart = (nx * nx + ny * ny - 1) * (nx * nx + ny * ny - 1) * (nx * nx + ny * ny - 1) - nx * nx * ny * ny * ny < 0;
+                if (inHeart) {
+                    heartLetters.push({
+                        x: x * heartFontSize,
+                        y: y * heartFontSize,
+                        char: heartAlphabet[Math.floor(Math.random() * heartAlphabet.length)],
+                        opacity: Math.random()
+                    });
+                }
+            }
+        }
+
+        function drawHeart() {
+            heartCtx.clearRect(0, 0, heartCanvas.width, heartCanvas.height);
+            
+            heartLetters.forEach(letter => {
+                // Cycle through pink shades
+                const colorIndex = Math.floor(Math.random() * 4);
+                const colors = ['#ff4fa3', '#ff6bb8', '#ff85c9', '#ff9ad8'];
+                heartCtx.fillStyle = colors[colorIndex];
+                heartCtx.globalAlpha = letter.opacity;
+                
+                // Draw circle/dot instead of letter
+                heartCtx.beginPath();
+                heartCtx.arc(letter.x, letter.y, heartFontSize * 0.5, 0, Math.PI * 2);
+                heartCtx.fill();
+                
+                // Twinkle effect
+                letter.opacity += (Math.random() - 0.5) * 0.1;
+                if (letter.opacity > 1) letter.opacity = 1;
+                if (letter.opacity < 0.5) letter.opacity = 0.5;
+            });
+            heartCtx.globalAlpha = 1;
+        }
+
+        let heartInterval;
+
+        // Utility function to wait
+        const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Display text function
+        const displayText = async (text, className, duration) => {
+            const container = document.getElementById('textContainer');
+            container.innerHTML = `<div class="${className}">${text}</div>`;
+            container.classList.add('show');
+            await wait(duration);
+            container.classList.remove('show');
+            await wait(500); // Wait for fade out
+        };
+
+        // Main sequence
+        const startSequence = async () => {
+            // Wait 3 seconds with just matrix rain
+            await wait(3000);
+
+            // Countdown
+            await displayText('3', 'countdown', 1000);
+            await displayText('2', 'countdown', 1000);
+            await displayText('1', 'countdown', 1000);
+
+            // Birthday message
+            await displayText('HAPPY', 'message', 1000);
+            await displayText('BIRTHDAY', 'message', 1000);
+            await displayText('TO', 'message', 1000);
+            await displayText('YOU', 'message', 1000);
+            await displayText('MALAK', 'message', 1000);
+            
+            // Show matrix heart
+            const heartCanvasEl = document.getElementById('heartCanvas');
+            heartCanvasEl.classList.add('show');
+            heartInterval = setInterval(drawHeart, 100);
+            await wait(3000);
+
+            // Fade out matrix rain and show stars
+            const matrixCanvasEl = document.getElementById('matrixCanvas');
+            matrixCanvasEl.style.transition = 'opacity 1s ease-in-out';
+            matrixCanvasEl.style.opacity = '0';
+            
+            // Hide heart
+            heartCanvasEl.style.transition = 'opacity 1s ease-in-out';
+            heartCanvasEl.style.opacity = '0';
+            clearInterval(heartInterval);
+            
+            // Show stars canvas
+            const starsCanvasEl = document.getElementById('starsCanvas');
+            starsCanvasEl.classList.add('show');
+            
+            // Start stars animation
+            starsInterval = setInterval(drawStars, 50);
+            
+            await wait(1000);
+
+            // Show the image
+            const imageContainer = document.getElementById('imageContainer');
+            imageContainer.classList.add('show');
+            
+            // Start fireworks from sides
+            animateFireworks();
+            fireworksInterval = setInterval(() => {
+                // Left side
+                createFirework(Math.random() * 150, Math.random() * window.innerHeight);
+                // Right side
+                createFirework(window.innerWidth - Math.random() * 150, Math.random() * window.innerHeight);
+            }, 600);
+        };
+
+        // Start the sequence when page loads
+        window.addEventListener('load', () => {
+            startSequence();
+        });
+    </script>
+</body>
+</html>
