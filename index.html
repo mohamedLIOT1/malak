@@ -133,6 +133,60 @@
             box-shadow: 0 0 26px rgba(255, 79, 163, 0.55), 0 0 46px rgba(255, 122, 196, 0.45);
         }
 
+        .lyrics-container {
+            position: fixed;
+            top: 0;
+            width: 25%;
+            height: 100vh;
+            z-index: 4;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .lyrics-container.show {
+            opacity: 1;
+        }
+
+        .lyrics-left {
+            left: 5%;
+        }
+
+        .lyrics-right {
+            right: 5%;
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 1.5rem;
+            color: #ff1493;
+            animation: floatHeart 6s infinite ease-in-out;
+            opacity: 0;
+        }
+
+        @keyframes floatHeart {
+            0% {
+                bottom: -10%;
+                opacity: 0;
+                transform: translateX(0) scale(0.5);
+            }
+            10% {
+                opacity: 1;
+            }
+            50% {
+                transform: translateX(20px) scale(1);
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 110%;
+                opacity: 0;
+                transform: translateX(-20px) scale(0.5);
+            }
+        }
+
         @media (max-width: 768px) {
             .countdown {
                 font-size: 20vw;
@@ -153,6 +207,13 @@
     <div id="imageContainer">
         <img id="birthdayImage" src="./1e599641-0614-46d0-9d57-150f42b4fd0a.gif" alt="Happy Birthday">
     </div>
+
+    <div class="lyrics-container lyrics-left" id="lyricsLeft"></div>
+    <div class="lyrics-container lyrics-right" id="lyricsRight"></div>
+
+    <audio id="bgMusic" autoplay loop>
+        <source src="./Lege-Cy - Placebo  ليجي-سي - بلاسيبو (Official Audio).mp3" type="audio/mpeg">
+    </audio>
 
     <script>
         // Matrix Rain Effect
@@ -449,6 +510,45 @@
             // Show the image
             const imageContainer = document.getElementById('imageContainer');
             imageContainer.classList.add('show');
+            
+            // Play music with interaction fallback
+            const music = document.getElementById('bgMusic');
+            music.volume = 0.7;
+            music.play().catch(e => {
+                console.log('Click anywhere to start music');
+                document.body.addEventListener('click', () => {
+                    music.play();
+                }, { once: true });
+            });
+
+            const lyricsLeft = document.getElementById('lyricsLeft');
+            const lyricsRight = document.getElementById('lyricsRight');
+            
+            // Show containers
+            lyricsLeft.classList.add('show');
+            lyricsRight.classList.add('show');
+            
+            // Create floating hearts
+            function createHeart(container) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerHTML = '💗';
+                heart.style.left = Math.random() * 80 + 10 + '%';
+                heart.style.animationDelay = Math.random() * 4 + 's';
+                heart.style.animationDuration = (Math.random() * 3 + 5) + 's';
+                container.appendChild(heart);
+                
+                // Remove heart after animation
+                setTimeout(() => {
+                    heart.remove();
+                }, parseFloat(heart.style.animationDuration) * 1000);
+            }
+            
+            // Generate hearts continuously
+            setInterval(() => {
+                createHeart(lyricsLeft);
+                createHeart(lyricsRight);
+            }, 800);
             
             // Start fireworks from sides
             animateFireworks();
