@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Matrix Birthday Card</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
         }
 
         #matrixCanvas {
@@ -280,28 +283,48 @@
 
         @media (max-width: 768px) and (orientation: landscape) {
             .countdown {
-                font-size: 15vh;
+                font-size: 12vh;
             }
             
             .message {
-                font-size: 10vh;
+                font-size: 8vh;
             }
 
             .note {
-                font-size: 3vh;
+                font-size: 2.5vh;
             }
 
             #birthdayImage {
-                max-width: 35vw;
-                max-height: 70vh;
+                max-width: 30vw;
+                max-height: 65vh;
             }
 
             .lyrics-container {
-                width: 22%;
+                width: 18%;
             }
 
             .heart {
-                font-size: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .watermark {
+                font-size: 0.7rem;
+                bottom: 10px;
+            }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            .countdown {
+                font-size: 10vh;
+            }
+            
+            .message {
+                font-size: 7vh;
+            }
+
+            #birthdayImage {
+                max-width: 25vw;
+                max-height: 60vh;
             }
         }
     </style>
@@ -608,6 +631,13 @@
 
         // Main sequence
         const startSequence = async () => {
+            // Check if mobile - wait for landscape orientation
+            if (window.innerWidth <= 768) {
+                while (window.innerHeight > window.innerWidth) {
+                    await wait(500);
+                }
+            }
+            
             // Wait 3 seconds with just matrix rain
             await wait(3000);
 
@@ -652,30 +682,10 @@
             const imageContainer = document.getElementById('imageContainer');
             imageContainer.classList.add('show');
             
-            // Play music with interaction fallback
+            // Play music automatically
             const music = document.getElementById('bgMusic');
             music.volume = 0.7;
-            
-            // Try to play immediately
-            const playPromise = music.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log('Music started automatically');
-                }).catch(e => {
-                    console.log('Autoplay prevented - Click anywhere to start music');
-                    // Add click listener to entire document
-                    const startMusic = () => {
-                        music.play().then(() => {
-                            console.log('Music started after user interaction');
-                        });
-                        document.removeEventListener('click', startMusic);
-                        document.removeEventListener('touchstart', startMusic);
-                    };
-                    document.addEventListener('click', startMusic);
-                    document.addEventListener('touchstart', startMusic);
-                });
-            }
+            music.play().catch(err => console.log('Autoplay - browser muted by default'));
 
             const lyricsLeft = document.getElementById('lyricsLeft');
             const lyricsRight = document.getElementById('lyricsRight');
@@ -700,11 +710,11 @@
                 }, parseFloat(heart.style.animationDuration) * 1000);
             }
             
-            // Generate hearts continuously
+            // Generate hearts continuously - more frequently
             setInterval(() => {
                 createHeart(lyricsLeft);
                 createHeart(lyricsRight);
-            }, 800);
+            }, 600);
             
             // Start fireworks from sides
             animateFireworks();
