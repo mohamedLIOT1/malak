@@ -355,7 +355,7 @@
 
     <div class="watermark">Coded by mohamed.lio for Malak</div>
 
-    <audio id="bgMusic" autoplay loop>
+    <audio id="bgMusic" autoplay loop playsinline muted>
         <source src="./Lege-Cy - Placebo  ليجي-سي - بلاسيبو (Official Audio).mp3" type="audio/mpeg">
     </audio>
 
@@ -385,13 +385,14 @@
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Set canvas size to match window dimensions
+        // Fit canvas to screen with devicePixelRatio
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            const dpr = window.devicePixelRatio || 1;
             canvas.style.width = window.innerWidth + 'px';
             canvas.style.height = window.innerHeight + 'px';
-            console.log('Canvas resized to:', canvas.width, 'x', canvas.height);
+            canvas.width = Math.floor(window.innerWidth * dpr);
+            canvas.height = Math.floor(window.innerHeight * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
         resizeCanvas();
 
@@ -400,13 +401,18 @@
         const pinkPalette = ['#ff4fa3', '#ff6bb8', '#ff85c9', '#ff9ad8'];
 
         const fontSize = 16;
-        const columns = canvas.width / fontSize;
-
+        let columns;
         const rainDrops = [];
 
-        for (let x = 0; x < columns; x++) {
-            rainDrops[x] = Math.random() * canvas.height / fontSize;
+        function initRain() {
+            columns = Math.max(1, Math.floor(window.innerWidth / fontSize));
+            rainDrops.length = columns;
+            for (let x = 0; x < columns; x++) {
+                rainDrops[x] = Math.random() * (canvas.height / fontSize);
+            }
         }
+        // Initialize raindrops after sizes are set
+        initRain();
 
         const draw = () => {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
@@ -432,18 +438,26 @@
         // Handle window resize
         window.addEventListener('resize', () => {
             resizeCanvas();
+            initRain();
         });
 
         window.addEventListener('orientationchange', () => {
-            setTimeout(resizeCanvas, 100);
+            setTimeout(() => { resizeCanvas(); initRain(); }, 100);
         });
 
         // Stars Effect
         const starsCanvas = document.getElementById('starsCanvas');
         const starsCtx = starsCanvas.getContext('2d');
         
-        starsCanvas.width = window.innerWidth;
-        starsCanvas.height = window.innerHeight;
+        function resizeStarsCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            starsCanvas.style.width = window.innerWidth + 'px';
+            starsCanvas.style.height = window.innerHeight + 'px';
+            starsCanvas.width = Math.floor(window.innerWidth * dpr);
+            starsCanvas.height = Math.floor(window.innerHeight * dpr);
+            starsCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resizeStarsCanvas();
 
         const stars = [];
         const numStars = 200;
@@ -494,15 +508,25 @@
         let starsInterval;
 
         window.addEventListener('resize', () => {
-            starsCanvas.width = window.innerWidth;
-            starsCanvas.height = window.innerHeight;
+            resizeStarsCanvas();
+        });
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeStarsCanvas, 100);
         });
 
         // Fireworks Effect
         const fireworksCanvas = document.getElementById('fireworksCanvas');
         const fireworksCtx = fireworksCanvas.getContext('2d');
-        fireworksCanvas.width = window.innerWidth;
-        fireworksCanvas.height = window.innerHeight;
+
+        function resizeFireworksCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            fireworksCanvas.style.width = window.innerWidth + 'px';
+            fireworksCanvas.style.height = window.innerHeight + 'px';
+            fireworksCanvas.width = Math.floor(window.innerWidth * dpr);
+            fireworksCanvas.height = Math.floor(window.innerHeight * dpr);
+            fireworksCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resizeFireworksCanvas();
 
         const particles = [];
 
@@ -567,8 +591,10 @@
         let fireworksInterval;
 
         window.addEventListener('resize', () => {
-            fireworksCanvas.width = window.innerWidth;
-            fireworksCanvas.height = window.innerHeight;
+            resizeFireworksCanvas();
+        });
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeFireworksCanvas, 100);
         });
 
         // Heart Canvas
@@ -662,6 +688,25 @@
             await displayText('BIRTHDAY', 'message', 1000);
             await displayText('TO', 'message', 1000);
             await displayText('YOU', 'message', 1000);
+
+            // Start music exactly when MALAK appears
+            const music = document.getElementById('bgMusic');
+            music.currentTime = 0;
+            music.muted = false; // unmute (element starts muted for autoplay compliance)
+            music.volume = 0; // fade in
+            // ensure playback requested now as well
+            try { music.play(); } catch (e) {}
+            // fade-in to target volume
+            const targetVol = 0.7;
+            const fadeMs = 1200;
+            const steps = 24;
+            let step = 0;
+            const volTimer = setInterval(() => {
+                step++;
+                music.volume = Math.min(targetVol, (step/steps) * targetVol);
+                if (step >= steps) clearInterval(volTimer);
+            }, Math.max(16, Math.floor(fadeMs/steps)));
+
             await displayText('MALAK', 'message', 1000);
             
             // Show matrix heart
@@ -693,26 +738,8 @@
             const imageContainer = document.getElementById('imageContainer');
             imageContainer.classList.add('show');
             
-            // Play music automatically
-            const music = document.getElementById('bgMusic');
-            music.volume = 0.7;
-            music.preload = 'auto';
-            
-            // Delay slightly to ensure audio is ready
-            setTimeout(() => {
-                music.play().then(() => {
-                    console.log('Music playing');
-                }).catch(err => {
-                    console.log('Autoplay failed, trying with user gesture');
-                    // Try on user interaction
-                    document.addEventListener('click', () => {
-                        music.play();
-                    }, { once: true });
-                    document.addEventListener('touchstart', () => {
-                        music.play();
-                    }, { once: true });
-                });
-            }, 500);
+            // Music already started at MALAK; ensure unmuted and volume is set
+            try { music.muted = false; music.volume = Math.max(music.volume, 0.7); } catch(e) {}
 
             const lyricsLeft = document.getElementById('lyricsLeft');
             const lyricsRight = document.getElementById('lyricsRight');
